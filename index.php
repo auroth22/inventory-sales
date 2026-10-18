@@ -20,7 +20,7 @@ $lowList    = $conn->query("SELECT name, stock, reorder_level FROM products WHER
 
 <h2>Low stock items</h2>
 <?php if ($lowList->num_rows === 0): ?>
-    <p>Nothing is running low. 👍</p>
+    <p>Nothing is running low. </p>
 <?php else: ?>
     <table>
         <tr><th>Product</th><th>Stock</th><th>Reorder level</th></tr>
