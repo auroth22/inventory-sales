@@ -18,6 +18,9 @@ $page_title = $page_title ?? 'Inventory and Sales';
     <a href="<?= BASE_URL ?>index.php">Dashboard</a>
     <a href="<?= BASE_URL ?>pages/categories.php">Categories</a>
     <a href="<?= BASE_URL ?>pages/products.php">Products</a>
+    <a href="<?= BASE_URL ?>pages/sales.php">New Sale</a>
+    <a href="<?= BASE_URL ?>pages/sales_history.php">Sales History</a>
+    <a href="<?= BASE_URL ?>pages/reports.php">Reports</a>
     <span class="spacer"></span>
     <span class="user"><?= htmlspecialchars($_SESSION['username']) ?> (<?= htmlspecialchars($_SESSION['role']) ?>)</span>
     <a href="<?= BASE_URL ?>logout.php">Log out</a>

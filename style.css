@@ -82,12 +82,12 @@ button.danger { background: #dc2626; }
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     color: #1f2937;
 }
-.auth-modal[open] { animation: pop 0.9s ease-out; }
+.auth-modal[open] { animation: pop 0.2s ease-out; }
 
 /* The dim, blurred layer behind the popup */
 .auth-modal::backdrop {
     background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(48px);
+    backdrop-filter: blur(4px);
 }
 
 @keyframes pop {
@@ -110,10 +110,36 @@ button.danger { background: #dc2626; }
 /* Tabs */
 .tabs { display: flex; background: #f1f5f9; border-radius: 10px; padding: 4px; margin-bottom: 18px; margin-top: 10px; }
 .tab { flex: 1; background: transparent; color: #475569; border-radius: 8px; padding: 8px; }
-.tab.active { background: white; color: #69ea72; font-weight: bold; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); }
+.tab.active { background: white; color: #1e3a8a; font-weight: bold; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); }
 
 /* Forms inside the popup: only the active one is visible */
 .panel { display: none; flex-direction: column; gap: 10px; }
 .panel.active { display: flex; }
 .panel input { padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; }
 .panel button[type="submit"] { padding: 11px; border-radius: 8px; font-size: 15px; }
+
+/* ===== Sales / POS ===== */
+.pos-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; align-items: start; }
+@media (max-width: 800px) { .pos-grid { grid-template-columns: 1fr; } }
+.qty-input { width: 70px; padding: 6px; }
+.cart-total { font-size: 20px; font-weight: bold; text-align: right; margin: 14px 0; }
+.cart-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+.inline-form label { display: flex; align-items: center; gap: 6px; }
+
+/* ===== Receipt ===== */
+.receipt { background: white; max-width: 480px; margin: 0 auto; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.receipt h2 { text-align: center; margin-top: 0; }
+.receipt-buttons { max-width: 480px; margin: 16px auto; display: flex; gap: 14px; align-items: center; }
+
+@media print {
+    .topbar, .no-print { display: none !important; }
+    body { background: white; }
+    .receipt { box-shadow: none; }
+}
+
+.add-form { display: flex; gap: 6px; margin: 0; }
+
+/* ===== Reports ===== */
+h2 { margin-top: 32px; }
+.bar-cell { width: 35%; }
+.bar { height: 14px; background: #2563eb; border-radius: 4px; min-width: 2px; }
