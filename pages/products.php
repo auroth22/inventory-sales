@@ -2,10 +2,17 @@
 require '../includes/auth.php';
 require '../includes/db.php';
 require_login();
+$admin = is_admin();   // true only for admins
 
 function flash($type, $text) { $_SESSION['flash'] = ['type' => $type, 'text' => $text]; }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Server-side check: hiding buttons is not security, this is
+    if (!$admin) {
+        flash('error', 'Only an admin can change products.');
+        header("Location: products.php");
+        exit;
+    }
     $action   = $_POST['action'] ?? '';
     $id       = (int)($_POST['id'] ?? 0);
     $name     = trim($_POST['name'] ?? '');
@@ -42,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $editing = null;
-if (isset($_GET['edit'])) {
+if ($admin && isset($_GET['edit'])) {
     $eid = (int)$_GET['edit'];
     $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
     $stmt->bind_param("i", $eid);
@@ -68,10 +75,11 @@ require '../includes/header.php';
 ?>
 <h1>Products</h1>
 
-<?php if (count($cats) === 0): ?>
+<?php if ($admin && count($cats) === 0): ?>
     <div class="flash error">Add at least one <a href="categories.php">category</a> first.</div>
 <?php endif; ?>
 
+<?php if ($admin): ?>
 <form method="POST" class="grid-form">
     <input type="hidden" name="action" value="<?= $editing ? 'update' : 'add' ?>">
     <?php if ($editing): ?><input type="hidden" name="id" value="<?= (int)$editing['id'] ?>"><?php endif; ?>
@@ -104,6 +112,8 @@ require '../includes/header.php';
     </div>
 </form>
 
+<?php endif; ?>
+
 <form method="GET" class="inline-form">
     <input type="text" name="q" placeholder="Search products..." value="<?= htmlspecialchars($q) ?>">
     <button type="submit">Search</button>
@@ -111,7 +121,7 @@ require '../includes/header.php';
 </form>
 
 <table>
-    <tr><th>#</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr>
+    <tr><th>#</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><?php if ($admin): ?><th>Actions</th><?php endif; ?></tr>
     <?php while ($r = $rows->fetch_assoc()): ?>
         <tr class="<?= $r['stock'] <= $r['reorder_level'] ? 'low' : '' ?>">
             <td><?= (int)$r['id'] ?></td>
@@ -119,6 +129,7 @@ require '../includes/header.php';
             <td><?= htmlspecialchars($r['category'] ?? '-') ?></td>
             <td>&#8369;<?= number_format($r['price'], 2) ?></td>
             <td><?= (int)$r['stock'] ?></td>
+            <?php if ($admin): ?>
             <td class="actions">
                 <a href="products.php?edit=<?= (int)$r['id'] ?>">Edit</a>
                 <form method="POST" onsubmit="return confirm('Delete this product?');">
@@ -127,6 +138,7 @@ require '../includes/header.php';
                     <button type="submit" class="danger">Delete</button>
                 </form>
             </td>
+            <?php endif; ?>
         </tr>
     <?php endwhile; ?>
 </table>

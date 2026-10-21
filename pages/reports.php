@@ -1,7 +1,7 @@
 <?php
 require '../includes/auth.php';
 require '../includes/db.php';
-require_login();
+require_admin();
 
 // Small helper: run a prepared query and return all rows
 function run($conn, $sql, $types = '', ...$params) {

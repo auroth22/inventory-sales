@@ -1,7 +1,7 @@
 <?php
 require '../includes/auth.php';
 require '../includes/db.php';
-require_login();
+require_admin();
 
 function flash($type, $text) { $_SESSION['flash'] = ['type' => $type, 'text' => $text]; }
 
