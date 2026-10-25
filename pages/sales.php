@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pid = (int)($_POST['product_id'] ?? 0);
         $qty = max(1, (int)($_POST['qty'] ?? 1));
 
-        $stmt = $conn->prepare("SELECT name, stock FROM products WHERE id = ?");
+        $stmt = $conn->prepare("SELECT name, stock FROM products WHERE id = ? AND is_active = 1");
         $stmt->bind_param("i", $pid);
         $stmt->execute();
         $p = $stmt->get_result()->fetch_assoc();
@@ -48,12 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // 1. Lock each product row, check stock, read the REAL price from the database
                 $lines = [];
                 $total = 0;
-                $sel = $conn->prepare("SELECT name, price, stock FROM products WHERE id = ? FOR UPDATE");
+                $sel = $conn->prepare("SELECT name, price, stock FROM products WHERE id = ? AND is_active = 1 FOR UPDATE");
                 foreach ($cart as $pid => $qty) {
                     $sel->bind_param("i", $pid);
                     $sel->execute();
                     $p = $sel->get_result()->fetch_assoc();
-                    if (!$p) { throw new Exception("A product in your cart no longer exists."); }
+                    if (!$p) { throw new Exception("A product in your cart is no longer available. Remove it and try again."); }
                     if ($p['stock'] < $qty) { throw new Exception("Not enough stock for {$p['name']} (only {$p['stock']} left)."); }
                     $lines[] = ['id' => $pid, 'qty' => $qty, 'price' => $p['price']];
                     $total += $p['price'] * $qty;
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ----- Data for the page -----
 $q    = trim($_GET['q'] ?? '');
 $like = "%$q%";
-$stmt = $conn->prepare("SELECT id, name, price, stock FROM products WHERE stock > 0 AND name LIKE ? ORDER BY name");
+$stmt = $conn->prepare("SELECT id, name, price, stock FROM products WHERE is_active = 1 AND stock > 0 AND name LIKE ? ORDER BY name");
 $stmt->bind_param("s", $like);
 $stmt->execute();
 $products = $stmt->get_result();

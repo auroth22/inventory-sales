@@ -2,11 +2,11 @@
 $page_title = 'Dashboard';
 require 'includes/header.php';
 
-$products   = $conn->query("SELECT COUNT(*) AS c FROM products")->fetch_assoc()['c'];
-$categories = $conn->query("SELECT COUNT(*) AS c FROM categories")->fetch_assoc()['c'];
-$low        = $conn->query("SELECT COUNT(*) AS c FROM products WHERE stock <= reorder_level")->fetch_assoc()['c'];
+$products   = $conn->query("SELECT COUNT(*) AS c FROM products WHERE is_active = 1")->fetch_assoc()['c'];
+$categories = $conn->query("SELECT COUNT(*) AS c FROM categories WHERE is_active = 1")->fetch_assoc()['c'];
+$low        = $conn->query("SELECT COUNT(*) AS c FROM products WHERE is_active = 1 AND stock <= reorder_level")->fetch_assoc()['c'];
 $today      = $conn->query("SELECT COALESCE(SUM(total),0) AS t FROM sales WHERE DATE(created_at) = CURDATE()")->fetch_assoc()['t'];
-$lowList    = $conn->query("SELECT name, stock, reorder_level FROM products WHERE stock <= reorder_level ORDER BY stock ASC LIMIT 10");
+$lowList    = $conn->query("SELECT name, stock, reorder_level FROM products WHERE is_active = 1 AND stock <= reorder_level ORDER BY stock ASC LIMIT 10");
 ?>
 <h1>Dashboard</h1>
 <p>Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!</p>

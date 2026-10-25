@@ -36,10 +36,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             flash('success', 'Product updated.');
         } elseif ($action === 'delete' && $id) {
-            $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            flash('success', 'Product deleted.');
+            try {
+                $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+                flash('success', 'Product deleted.');
+            } catch (mysqli_sql_exception $e) {
+                if ($e->getCode() == 1451) {   // part of a past sale, so hide it instead
+                    $stmt = $conn->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
+                    $stmt->bind_param("i", $id);
+                    $stmt->execute();
+                    flash('success', 'Product removed (archived, because it is part of past sales).');
+                } else {
+                    throw $e;   // the outer catch will show it
+                }
+            }
         }
     } catch (mysqli_sql_exception $e) {
         flash('error', "Can't complete that. The product may already be part of a sale. (" . $e->getMessage() . ")");
@@ -57,14 +68,14 @@ if ($admin && isset($_GET['edit'])) {
     $editing = $stmt->get_result()->fetch_assoc();
 }
 
-$cats = $conn->query("SELECT id, name FROM categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+$cats = $conn->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 
 $q    = trim($_GET['q'] ?? '');
 $like = "%$q%";
 $stmt = $conn->prepare(
     "SELECT p.*, c.name AS category FROM products p
      LEFT JOIN categories c ON c.id = p.category_id
-     WHERE p.name LIKE ? ORDER BY p.name"
+     WHERE p.is_active = 1 AND p.name LIKE ? ORDER BY p.name"
 );
 $stmt->bind_param("s", $like);
 $stmt->execute();

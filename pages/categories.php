@@ -22,17 +22,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             flash('success', 'Category updated.');
         } elseif ($action === 'delete' && $id) {
-            $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM products WHERE category_id = ?");
+            // Only ACTIVE products block a category from being removed
+            $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM products WHERE category_id = ? AND is_active = 1");
             $stmt->bind_param("i", $id);
             $stmt->execute();
             $count = $stmt->get_result()->fetch_assoc()['c'];
             if ($count > 0) {
-                flash('error', "Can't delete: $count product(s) still use this category.");
+                flash('error', "Can't delete: $count active product(s) still use this category.");
             } else {
-                $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
-                $stmt->bind_param("i", $id);
-                $stmt->execute();
-                flash('success', 'Category deleted.');
+                try {
+                    $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
+                    $stmt->bind_param("i", $id);
+                    $stmt->execute();
+                    flash('success', 'Category deleted.');
+                } catch (mysqli_sql_exception $e) {
+                    if ($e->getCode() == 1451) {   // archived products still point to it
+                        $stmt = $conn->prepare("UPDATE categories SET is_active = 0 WHERE id = ?");
+                        $stmt->bind_param("i", $id);
+                        $stmt->execute();
+                        flash('success', 'Category removed (archived, because old products still reference it).');
+                    } else {
+                        throw $e;   // the outer catch will show it
+                    }
+                }
             }
         } else {
             flash('error', 'Please enter a category name.');
@@ -55,7 +67,9 @@ if (isset($_GET['edit'])) {
 
 $rows = $conn->query(
     "SELECT c.id, c.name, COUNT(p.id) AS product_count
-     FROM categories c LEFT JOIN products p ON p.category_id = c.id
+     FROM categories c
+     LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1
+     WHERE c.is_active = 1
      GROUP BY c.id, c.name ORDER BY c.name"
 );
 
