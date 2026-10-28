@@ -65,74 +65,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Inventory and Sales</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="landing">
 
-    <!-- The page behind the popup -->
-    <div class="hero">
-        <h1>Inventory &amp; Sales</h1>
-        <p>Track your stock and sales in one place.</p>
-        <button type="button" id="open-auth">Sign in</button>
-    </div>
+    <!-- Top bar with login -->
+    <header class="fb-header">
+        <div class="fb-header-inner">
+            <span class="fb-logo">inventory</span>
 
-    <!-- The popup. <dialog> is a built-in HTML element. -->
-    <dialog id="auth-modal" class="auth-modal">
-        <div class="auth-inner">
-            <button type="button" class="close-x" id="close-auth" aria-label="Close">&times;</button>
-
-            <div class="tabs">
-                <button type="button" class="tab" data-tab="login">Log in</button>
-                <button type="button" class="tab" data-tab="register">Register</button>
-            </div>
-
-            <?php if ($error): ?><p class="error"><?= htmlspecialchars($error) ?></p><?php endif; ?>
-            <?php if ($success): ?><p class="success"><?= htmlspecialchars($success) ?></p><?php endif; ?>
-
-            <form method="POST" id="form-login" class="panel">
+            <form method="POST" class="fb-login">
                 <input type="hidden" name="form" value="login">
-                <input type="text" name="username" placeholder="Username" required
-                       value="<?= $tab === 'login' ? htmlspecialchars($old_username) : '' ?>">
-                <input type="password" name="password" placeholder="Password" required>
-                <button type="submit">Log in</button>
+                <div class="fb-field">
+                    <label for="login-username">Username</label>
+                    <input id="login-username" type="text" name="username" required
+                           value="<?= $tab === 'login' ? htmlspecialchars($old_username) : '' ?>">
+                </div>
+                <div class="fb-field">
+                    <label for="login-pass">Password</label>
+                    <input id="login-pass" type="password" name="password" required>
+                </div>
+                <button type="submit" class="fb-login-btn">Log In</button>
             </form>
+        </div>
+    </header>
 
-            <form method="POST" id="form-register" class="panel">
+    <!-- Messages for login errors / "account created" -->
+    <?php if ($error && $tab === 'login'): ?>
+        <div class="flash error landing-flash"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+    <?php if ($success): ?>
+        <div class="flash success landing-flash"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
+
+    <!-- Open space -->
+    <main class="landing-body">
+        <div class="hero">
+            <h1>Track your stock and sales in one place.</h1>
+            <p>It's free and always will be.</p>
+            <button type="button" id="open-register">Sign Up</button>
+        </div>
+    </main>
+
+    <!-- Register-only popup -->
+    <dialog id="register-modal" class="auth-modal">
+        <div class="auth-inner">
+            <button type="button" class="close-x" id="close-register" aria-label="Close">&times;</button>
+            <h2>Sign Up</h2>
+            <p class="modal-sub">It's quick and easy.</p>
+
+            <?php if ($error && $tab === 'register'): ?>
+                <p class="error"><?= htmlspecialchars($error) ?></p>
+            <?php endif; ?>
+
+            <form method="POST" class="panel">
                 <input type="hidden" name="form" value="register">
                 <input type="text" name="username" placeholder="Choose a username" required
                        value="<?= $tab === 'register' ? htmlspecialchars($old_username) : '' ?>">
                 <input type="password" name="password" placeholder="Password (min 6 characters)" required>
                 <input type="password" name="confirm" placeholder="Confirm password" required>
-                <button type="submit">Create account</button>
+                <button type="submit">Sign Up</button>
             </form>
         </div>
     </dialog>
 
     <script>
-        const modal  = document.getElementById('auth-modal');
-        const tabs   = document.querySelectorAll('.tab');
-        const panels = document.querySelectorAll('.panel');
-
-        // Show one tab and hide the other
-        function showTab(name) {
-            tabs.forEach(t   => t.classList.toggle('active', t.dataset.tab === name));
-            panels.forEach(p => p.classList.toggle('active', p.id === 'form-' + name));
-        }
-
-        tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
-
-        // Open and close buttons
-        document.getElementById('open-auth').addEventListener('click', () => modal.showModal());
-        document.getElementById('close-auth').addEventListener('click', () => modal.close());
+        const modal = document.getElementById('register-modal');
+        document.getElementById('open-register').addEventListener('click', () => modal.showModal());
+        document.getElementById('close-register').addEventListener('click', () => modal.close());
 
         // Click on the dark area outside the box to close
         modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
 
-        // Open on page load, on the right tab (PHP fills in the value)
-        showTab('<?= $tab ?>');
+        <?php if ($tab === 'register'): ?>
+        // Reopen automatically after a failed registration (or ?tab=register)
         modal.showModal();
+        <?php endif; ?>
     </script>
 </body>
 </html>
