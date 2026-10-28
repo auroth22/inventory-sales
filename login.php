@@ -66,15 +66,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Inventory and Sales</title>
+    <title>Inventory & Sales</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+        // Apply the saved theme before the page paints (no flash). Default = Fredbear.
+        try { if (localStorage.getItem('landing-theme') === 'plain') document.documentElement.dataset.theme = 'plain'; } catch (e) {}
+    </script>
 </head>
 <body class="landing">
 
     <!-- Top bar with login -->
     <header class="fb-header">
         <div class="fb-header-inner">
-            <span class="fb-logo">inventory</span>
+            <span class="fb-logo">inventory & sales</span>
 
             <form method="POST" class="fb-login">
                 <input type="hidden" name="form" value="login">
@@ -100,21 +104,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="flash success landing-flash"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
 
-    <!-- Open space -->
     <main class="landing-body">
+        <!-- Left: tagline -->
         <div class="hero">
             <h1>Track your stock and sales in one place.</h1>
-            <p>It's free and always will be.</p>
-            <button type="button" id="open-register">Sign Up</button>
+            <p>It's free real estate.</p>
+            <div class="eyes" aria-hidden="true"><i></i><i></i></div>
         </div>
-    </main>
 
-    <!-- Register-only popup -->
-    <dialog id="register-modal" class="auth-modal">
-        <div class="auth-inner">
-            <button type="button" class="close-x" id="close-register" aria-label="Close">&times;</button>
+        <!-- Right: sign-up window -->
+        <section class="signup-card">
             <h2>Sign Up</h2>
-            <p class="modal-sub">It's quick and easy.</p>
+            <p class="signup-sub">It's quick and easy as 9/11.</p>
 
             <?php if ($error && $tab === 'register'): ?>
                 <p class="error"><?= htmlspecialchars($error) ?></p>
@@ -123,26 +124,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <form method="POST" class="panel">
                 <input type="hidden" name="form" value="register">
                 <input type="text" name="username" placeholder="Choose a username" required
+                       <?= $tab === 'register' ? 'autofocus' : '' ?>
                        value="<?= $tab === 'register' ? htmlspecialchars($old_username) : '' ?>">
                 <input type="password" name="password" placeholder="Password (min 6 characters)" required>
                 <input type="password" name="confirm" placeholder="Confirm password" required>
                 <button type="submit">Sign Up</button>
             </form>
-        </div>
-    </dialog>
+        </section>
+    </main>
+
+    <button type="button" class="theme-toggle" id="theme-toggle"></button>
 
     <script>
-        const modal = document.getElementById('register-modal');
-        document.getElementById('open-register').addEventListener('click', () => modal.showModal());
-        document.getElementById('close-register').addEventListener('click', () => modal.close());
+        const root = document.documentElement;
+        const btn  = document.getElementById('theme-toggle');
 
-        // Click on the dark area outside the box to close
-        modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
-
-        <?php if ($tab === 'register'): ?>
-        // Reopen automatically after a failed registration (or ?tab=register)
-        modal.showModal();
-        <?php endif; ?>
+        function paint() {
+            const plain = root.dataset.theme === 'plain';
+            btn.textContent = plain ? 'Theme: Plain \u00b7 switch to Fredbear' : 'Theme: Fredbear \u00b7 switch to Plain';
+            btn.setAttribute('aria-label', btn.textContent);
+        }
+        btn.addEventListener('click', () => {
+            const next = root.dataset.theme === 'plain' ? 'fredbear' : 'plain';
+            root.dataset.theme = next;
+            try { localStorage.setItem('landing-theme', next); } catch (e) {}
+            paint();
+        });
+        paint();
     </script>
 </body>
 </html>
