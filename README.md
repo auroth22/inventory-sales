@@ -16,6 +16,3 @@ A web-based inventory and point-of-sale system built with PHP and MySQL.
 7. reset.sql reformats the whole system which gives it a fresh new one to start with.
 8. seed.sql is the prepared data for the inventory system, it easily sets up whats inside.
 9. finally added archive function.
-10. is going solo a big mistake? idk ask ozzy osbourne
-11. losing 5 ranked games in a row ain't fun, I almost broke my phone in half.
-12. stream K/DA - Firestarter pls pls pls
