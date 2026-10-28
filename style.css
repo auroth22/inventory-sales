@@ -1,7 +1,7 @@
 /* =========================================================
    Inventory & Sales: restyled
    Direction: flat "Facebook 2015" for the app,
-   chunky game-style buttons for the login/register popup.
+   old-Facebook landing page with a register-only popup.
    All original class names kept.
    ========================================================= */
 
@@ -85,134 +85,87 @@ button.danger:hover { background: var(--red-dark); }
 .switch-link a { color: var(--blue-light); }
 
 /* =========================================================
-   Landing page + popup
-   Flat blue bar on top (like 2015 Facebook), light gray page
+   Landing page: old-Facebook top bar + open space
    ========================================================= */
-.landing {
-    min-height: 100vh;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-    color: var(--text);
-    text-align: center;
-    position: relative;
-    padding: 80px 20px 20px;
-}
-.landing::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 56px;
-    background: var(--blue);
-    border-bottom: 1px solid #29487d;
-}
-.hero { max-width: 520px; }
-.hero h1 { font-size: 40px; margin: 0 0 10px; color: var(--blue); letter-spacing: -1px; }
-.hero p { font-size: 18px; color: var(--muted); line-height: 1.4; margin: 0; }
+.landing { margin: 0; min-height: 100vh; background: var(--bg); }
+.landing-flash { max-width: 980px; margin: 16px auto 0; }
 
-/* Chunky green call-to-action */
+/* ----- Top bar ----- */
+.fb-header { background: var(--blue); border-bottom: 1px solid #29487d; }
+.fb-header-inner {
+    max-width: 980px; margin: 0 auto; padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.fb-logo { color: white; font-size: 30px; font-weight: bold; letter-spacing: -1.5px; }
+
+.fb-login { display: flex; align-items: flex-start; gap: 12px; }
+.fb-field { display: flex; flex-direction: column; gap: 3px; }
+.fb-field label { color: #dfe3ee; font-size: 11px; }
+.fb-field input[type="text"],
+.fb-field input[type="password"] {
+    width: 150px; padding: 5px 6px; font-size: 12px;
+    border: 1px solid #1d2a5b; border-radius: 0;
+}
+.fb-field input:focus { box-shadow: none; border-color: #fff; }
+
+.fb-login-btn {
+    margin-top: 15px; padding: 4px 10px; font-size: 12px;
+    background: #4b67a1; border: 1px solid #29447e; border-radius: 0;
+}
+.fb-login-btn:hover { background: #5b76b0; }
+
+/* ----- Open space ----- */
+.landing-body { padding: 80px 20px; }
+.hero { max-width: 520px; margin: 0 auto; text-align: left; }
+.hero h1 { font-size: 28px; line-height: 1.25; margin: 0 0 10px; letter-spacing: -0.5px; }
+.hero p { font-size: 18px; color: var(--muted); margin: 0; }
+
 .hero button {
-    margin-top: 24px;
-    padding: 14px 36px;
-    font-size: 18px;
-    font-weight: bold;
-    color: white;
-    background: var(--green);
-    border: 1px solid var(--green-dark);
-    border-bottom: 5px solid var(--green-dark);
-    border-radius: 10px;
+    margin-top: 24px; padding: 12px 34px; font-size: 18px; color: white;
+    background: var(--green); border: 1px solid var(--green-dark);
+    border-bottom: 5px solid var(--green-dark); border-radius: 10px;
     text-shadow: 0 1px 0 rgba(0,0,0,0.25);
     transition: transform 0.05s, border-bottom-width 0.05s;
 }
 .hero button:hover { background: #4cc832; }
 .hero button:active { transform: translateY(3px); border-bottom-width: 2px; }
 
-/* ===== Popup box ===== */
+/* ===== Register popup ===== */
 .auth-modal {
-    border: 3px solid var(--blue);
-    border-radius: 14px;
-    padding: 0;                       /* padding lives on .auth-inner so backdrop clicks work */
-    width: min(380px, 92vw);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-    color: var(--text);
-    background: white;
+    border: 3px solid var(--blue); border-radius: 14px; padding: 0;
+    width: min(400px, 92vw); background: white; color: var(--text);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
 }
 .auth-modal[open] { animation: pop 0.18s ease-out; }
-.auth-modal::backdrop { background: rgba(20, 28, 48, 0.6); backdrop-filter: blur(3px); }
-
+.auth-modal::backdrop { background: rgba(20,28,48,0.6); backdrop-filter: blur(3px); }
 @keyframes pop {
     from { opacity: 0; transform: translateY(10px) scale(0.97); }
     to   { opacity: 1; transform: none; }
 }
-@media (prefers-reduced-motion: reduce) {
-    .auth-modal[open] { animation: none; }
-}
+@media (prefers-reduced-motion: reduce) { .auth-modal[open] { animation: none; } }
 
 .auth-inner { padding: 26px; position: relative; background: linear-gradient(#f5f7fb, white 90px); border-radius: 11px; }
+.auth-inner h2 { margin: 0; font-size: 28px; }
+.modal-sub { margin: 2px 0 16px; color: var(--muted); }
 
 .close-x {
-    position: absolute;
-    top: 8px; right: 12px;
-    background: none;
-    border: none;
-    color: #8d949e;
-    font-size: 28px;
-    padding: 0 6px;
+    position: absolute; top: 8px; right: 12px; background: none; border: none;
+    color: #8d949e; font-size: 28px; padding: 0 6px;
 }
 .close-x:hover { background: none; color: var(--red); }
 
-/* ===== Tabs: chunky toggle ===== */
-.tabs { display: flex; gap: 6px; background: #dfe3ee; border-radius: 12px; padding: 5px; margin: 10px 0 18px; }
-.tab {
-    flex: 1;
-    background: transparent;
-    color: var(--blue);
-    border: none;
-    border-radius: 9px;
-    padding: 10px;
-    font-size: 15px;
-}
-.tab:hover { background: rgba(255,255,255,0.5); }
-.tab.active {
-    background: white;
-    color: var(--blue);
-    border-bottom: 3px solid #b5bfd6;
-}
-
-/* ===== Forms inside popup: only active one visible ===== */
-.panel { display: none; flex-direction: column; gap: 10px; }
-.panel.active { display: flex; }
+.panel { display: flex; flex-direction: column; gap: 10px; }
 .panel input { padding: 12px; border: 2px solid #ccd0d5; border-radius: 10px; font-size: 16px; }
 .panel input:focus { border-color: var(--blue-light); box-shadow: none; }
-
-/* Chunky "pressable" submit button */
 .panel button[type="submit"] {
-    margin-top: 4px;
-    padding: 12px;
-    font-size: 17px;
-    color: white;
-    background: var(--green);
-    border: 1px solid var(--green-dark);
-    border-bottom: 5px solid var(--green-dark);
-    border-radius: 10px;
+    margin-top: 4px; padding: 12px; font-size: 17px; color: white;
+    background: var(--green); border: 1px solid var(--green-dark);
+    border-bottom: 5px solid var(--green-dark); border-radius: 10px;
     text-shadow: 0 1px 0 rgba(0,0,0,0.25);
     transition: transform 0.05s, border-bottom-width 0.05s;
 }
 .panel button[type="submit"]:hover { background: #4cc832; }
 .panel button[type="submit"]:active { transform: translateY(3px); border-bottom-width: 2px; }
-
-/* Register panel gets the orange button so the two actions feel different.
-   Change "register" below if your panel uses another id/class. */
-#register-panel button[type="submit"],
-.panel.register button[type="submit"] {
-    background: var(--orange);
-    border-color: var(--orange-dark);
-    border-bottom-color: var(--orange-dark);
-}
-#register-panel button[type="submit"]:hover,
-.panel.register button[type="submit"]:hover { background: #ffa534; }
 
 /* ===== Sales / POS ===== */
 .pos-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; align-items: start; }
@@ -237,14 +190,19 @@ button.danger:hover { background: var(--red-dark); }
 
 /* ===== Reports ===== */
 h2 { margin-top: 32px; }
+.auth-inner h2 { margin-top: 0; }
 .bar-cell { width: 35%; }
 .bar { height: 14px; background: var(--blue-light); border-radius: 2px; min-width: 2px; }
 
 /* ===== Small screens ===== */
 @media (max-width: 640px) {
     .topbar { flex-wrap: wrap; gap: 10px; padding: 6px 12px; }
-    .hero h1 { font-size: 30px; }
+    .hero h1 { font-size: 24px; }
     .inline-form { flex-wrap: wrap; }
     .inline-form input { min-width: 0; flex: 1; }
     table { display: block; overflow-x: auto; }
+
+    .fb-header-inner { flex-direction: column; align-items: flex-start; }
+    .fb-login { flex-wrap: wrap; }
+    .fb-field input[type="text"], .fb-field input[type="password"] { width: 130px; }
 }
