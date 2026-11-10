@@ -59,15 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$editing = null;
-if ($admin && isset($_GET['edit'])) {
-    $eid = (int)$_GET['edit'];
-    $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-    $stmt->bind_param("i", $eid);
-    $stmt->execute();
-    $editing = $stmt->get_result()->fetch_assoc();
-}
-
 $cats = $conn->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY name")->fetch_all(MYSQLI_ASSOC);
 
 $q    = trim($_GET['q'] ?? '');
@@ -75,7 +66,10 @@ $like = "%$q%";
 $stmt = $conn->prepare(
     "SELECT p.*, c.name AS category FROM products p
      LEFT JOIN categories c ON c.id = p.category_id
-     WHERE p.is_active = 1 AND p.name LIKE ? ORDER BY p.name"
+     WHERE p.is_active = 1 AND p.name LIKE ?
+     ORDER BY (p.stock <= p.reorder_level) DESC,
+              CASE WHEN p.stock <= p.reorder_level THEN p.stock END ASC,
+              p.name"
 );
 $stmt->bind_param("s", $like);
 $stmt->execute();
@@ -91,38 +85,34 @@ require '../includes/header.php';
 <?php endif; ?>
 
 <?php if ($admin): ?>
+<!-- Add product (editing happens in the popup further down) -->
 <form method="POST" class="grid-form">
-    <input type="hidden" name="action" value="<?= $editing ? 'update' : 'add' ?>">
-    <?php if ($editing): ?><input type="hidden" name="id" value="<?= (int)$editing['id'] ?>"><?php endif; ?>
+    <input type="hidden" name="action" value="add">
 
     <label>Name
-        <input type="text" name="name" required value="<?= $editing ? htmlspecialchars($editing['name']) : '' ?>">
+        <input type="text" name="name" required>
     </label>
     <label>Category
         <select name="category_id">
             <option value="0">-- none --</option>
             <?php foreach ($cats as $c): ?>
-                <option value="<?= (int)$c['id'] ?>" <?= ($editing && $editing['category_id'] == $c['id']) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($c['name']) ?>
-                </option>
+                <option value="<?= (int)$c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
             <?php endforeach; ?>
         </select>
     </label>
     <label>Price
-        <input type="number" name="price" step="0.01" min="0" required value="<?= $editing ? htmlspecialchars($editing['price']) : '' ?>">
+        <input type="number" name="price" step="0.01" min="0" required>
     </label>
     <label>Stock
-        <input type="number" name="stock" min="0" required value="<?= $editing ? (int)$editing['stock'] : 0 ?>">
+        <input type="number" name="stock" min="0" required value="0">
     </label>
     <label>Reorder level
-        <input type="number" name="reorder_level" min="0" required value="<?= $editing ? (int)$editing['reorder_level'] : 5 ?>">
+        <input type="number" name="reorder_level" min="0" required value="5">
     </label>
     <div class="form-buttons">
-        <button type="submit"><?= $editing ? 'Save changes' : 'Add product' ?></button>
-        <?php if ($editing): ?><a href="products.php" class="btn-link">Cancel</a><?php endif; ?>
+        <button type="submit">Add product</button>
     </div>
 </form>
-
 <?php endif; ?>
 
 <form method="GET" class="inline-form">
@@ -133,8 +123,12 @@ require '../includes/header.php';
 
 <table>
     <tr><th>#</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><?php if ($admin): ?><th>Actions</th><?php endif; ?></tr>
-    <?php while ($r = $rows->fetch_assoc()): ?>
-        <tr class="<?= $r['stock'] <= $r['reorder_level'] ? 'low' : '' ?>">
+    <?php $section = null; while ($r = $rows->fetch_assoc()):
+        $isLow = $r['stock'] <= $r['reorder_level'];
+        if ($section !== $isLow): $section = $isLow; ?>
+        <tr class="section-row"><td colspan="<?= $admin ? 6 : 5 ?>"><?= $isLow ? 'Low stock' : 'Well stocked' ?></td></tr>
+    <?php endif; ?>
+        <tr class="<?= $isLow ? 'low' : '' ?>">
             <td><?= (int)$r['id'] ?></td>
             <td><?= htmlspecialchars($r['name']) ?></td>
             <td><?= htmlspecialchars($r['category'] ?? '-') ?></td>
@@ -142,7 +136,13 @@ require '../includes/header.php';
             <td><?= (int)$r['stock'] ?></td>
             <?php if ($admin): ?>
             <td class="actions">
-                <a href="products.php?edit=<?= (int)$r['id'] ?>">Edit</a>
+                <button type="button" class="link-button edit-btn"
+                        data-id="<?= (int)$r['id'] ?>"
+                        data-name="<?= htmlspecialchars($r['name']) ?>"
+                        data-category-id="<?= (int)($r['category_id'] ?? 0) ?>"
+                        data-price="<?= htmlspecialchars($r['price']) ?>"
+                        data-stock="<?= (int)$r['stock'] ?>"
+                        data-reorder="<?= (int)$r['reorder_level'] ?>">Edit</button>
                 <form method="POST" onsubmit="return confirm('Delete this product?');">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
@@ -153,4 +153,73 @@ require '../includes/header.php';
         </tr>
     <?php endwhile; ?>
 </table>
+
+<?php if ($admin): ?>
+<!-- Edit popup -->
+<dialog id="edit-modal" class="auth-modal">
+    <div class="auth-inner">
+        <button type="button" class="close-x" id="edit-close" aria-label="Close">&times;</button>
+        <h2 class="modal-title">Edit product</h2>
+        <p class="modal-sub" id="edit-title"></p>
+
+        <form method="POST" class="modal-form">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="id" id="edit-id">
+
+            <label>Name
+                <input type="text" name="name" id="edit-name" required>
+            </label>
+            <label>Category
+                <select name="category_id" id="edit-category">
+                    <option value="0">-- none --</option>
+                    <?php foreach ($cats as $c): ?>
+                        <option value="<?= (int)$c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Price
+                <input type="number" name="price" id="edit-price" step="0.01" min="0" required>
+            </label>
+            <label>Stock
+                <input type="number" name="stock" id="edit-stock" min="0" required>
+            </label>
+            <label>Reorder level
+                <input type="number" name="reorder_level" id="edit-reorder" min="0" required>
+            </label>
+
+            <div class="modal-buttons">
+                <button type="button" class="secondary" id="edit-cancel">Cancel</button>
+                <button type="submit">Save changes</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<script>
+    const editModal = document.getElementById('edit-modal');
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const d = btn.dataset;
+            document.getElementById('edit-id').value      = d.id;
+            document.getElementById('edit-name').value    = d.name;
+            document.getElementById('edit-price').value   = d.price;
+            document.getElementById('edit-stock').value   = d.stock;
+            document.getElementById('edit-reorder').value = d.reorder;
+            document.getElementById('edit-title').textContent = d.name;
+
+            // Pick the product's category (fall back to "none" if it was archived)
+            const sel = document.getElementById('edit-category');
+            sel.value = d.categoryId;
+            if (sel.value !== d.categoryId) { sel.value = '0'; }
+
+            editModal.showModal();
+        });
+    });
+
+    document.getElementById('edit-close').addEventListener('click',  () => editModal.close());
+    document.getElementById('edit-cancel').addEventListener('click', () => editModal.close());
+    editModal.addEventListener('click', e => { if (e.target === editModal) editModal.close(); });
+</script>
+<?php endif; ?>
 <?php require '../includes/footer.php'; ?>
