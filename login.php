@@ -60,6 +60,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Open the popup right away after an error, a new account, or a ?tab=register link
+$autoOpen = ($error !== '' || $success !== '' || isset($_GET['tab']));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,85 +72,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Inventory & Sales</title>
     <link rel="stylesheet" href="style.css">
     <script>
-        // Apply the saved theme before the page paints (no flash). Default = Fredbear.
-        try { if (localStorage.getItem('landing-theme') === 'plain') document.documentElement.dataset.theme = 'plain'; } catch (e) {}
+        // Apply the saved theme before the page paints (no flash). Default = dark.
+        try { if (localStorage.getItem('theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
     </script>
 </head>
 <body class="landing">
 
-    <!-- Top bar with login -->
-    <header class="fb-header">
-        <div class="fb-header-inner">
-            <span class="fb-logo">inventory & sales</span>
-
-            <form method="POST" class="fb-login">
-                <input type="hidden" name="form" value="login">
-                <div class="fb-field">
-                    <label for="login-username">Username</label>
-                    <input id="login-username" type="text" name="username" required
-                           value="<?= $tab === 'login' ? htmlspecialchars($old_username) : '' ?>">
-                </div>
-                <div class="fb-field">
-                    <label for="login-pass">Password</label>
-                    <input id="login-pass" type="password" name="password" required>
-                </div>
-                <button type="submit" class="fb-login-btn">Log In</button>
-            </form>
-        </div>
-    </header>
-
-    <!-- Messages for login errors / "account created" -->
-    <?php if ($error && $tab === 'login'): ?>
-        <div class="flash error landing-flash"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-    <?php if ($success): ?>
-        <div class="flash success landing-flash"><?= htmlspecialchars($success) ?></div>
-    <?php endif; ?>
-
-    <main class="landing-body">
-        <!-- Left: tagline -->
-        <div class="hero">
-            <h1>Track your stock and sales in one place.</h1>
-            <p>It's free real estate.</p>
-            <div class="eyes" aria-hidden="true"><i></i><i></i></div>
-        </div>
-
-        <!-- Right: sign-up window -->
-        <section class="signup-card">
-            <h2>Sign Up</h2>
-            <p class="signup-sub">It's quick and easy as 9/11.</p>
-
-            <?php if ($error && $tab === 'register'): ?>
-                <p class="error"><?= htmlspecialchars($error) ?></p>
-            <?php endif; ?>
-
-            <form method="POST" class="panel">
-                <input type="hidden" name="form" value="register">
-                <input type="text" name="username" placeholder="Choose a username" required
-                       <?= $tab === 'register' ? 'autofocus' : '' ?>
-                       value="<?= $tab === 'register' ? htmlspecialchars($old_username) : '' ?>">
-                <input type="password" name="password" placeholder="Password (min 6 characters)" required>
-                <input type="password" name="confirm" placeholder="Confirm password" required>
-                <button type="submit">Sign Up</button>
-            </form>
-        </section>
+    <main class="hero">
+        <h1>Track your stock and sales in one place.</h1>
+        <p>It's free real estate.</p>
+        <button type="button" id="open-auth">Let&rsquo;s get started</button>
     </main>
+
+    <!-- Login / register popup -->
+    <dialog id="auth-modal" class="auth-modal">
+        <div class="auth-inner">
+            <button type="button" class="close-x" id="close-auth" aria-label="Close">&times;</button>
+
+            <div class="tabs">
+                <button type="button" class="tab <?= $tab === 'login' ? 'active' : '' ?>" data-tab="login">Log In</button>
+                <button type="button" class="tab <?= $tab === 'register' ? 'active' : '' ?>" data-tab="register">Register</button>
+            </div>
+
+            <!-- Log in -->
+            <form method="POST" class="panel <?= $tab === 'login' ? 'active' : '' ?>" id="panel-login">
+                <input type="hidden" name="form" value="login">
+                <?php if ($error && $tab === 'login'): ?>
+                    <p class="error"><?= htmlspecialchars($error) ?></p>
+                <?php endif; ?>
+                <?php if ($success): ?>
+                    <p class="success"><?= htmlspecialchars($success) ?></p>
+                <?php endif; ?>
+                <input type="text" name="username" placeholder="Username" aria-label="Username" required
+                       autocomplete="username"
+                       value="<?= $tab === 'login' ? htmlspecialchars($old_username) : '' ?>">
+                <input type="password" name="password" placeholder="Password" aria-label="Password" required
+                       autocomplete="current-password">
+                <button type="submit">Log In</button>
+            </form>
+
+            <!-- Register -->
+            <form method="POST" class="panel <?= $tab === 'register' ? 'active' : '' ?>" id="panel-register">
+                <input type="hidden" name="form" value="register">
+                <?php if ($error && $tab === 'register'): ?>
+                    <p class="error"><?= htmlspecialchars($error) ?></p>
+                <?php endif; ?>
+                <input type="text" name="username" placeholder="Choose a username" aria-label="Choose a username" required
+                       autocomplete="username"
+                       value="<?= $tab === 'register' ? htmlspecialchars($old_username) : '' ?>">
+                <input type="password" name="password" placeholder="Password (min 6 characters)" aria-label="Password" required
+                       autocomplete="new-password">
+                <input type="password" name="confirm" placeholder="Confirm password" aria-label="Confirm password" required
+                       autocomplete="new-password">
+                <button type="submit">Create account</button>
+            </form>
+        </div>
+    </dialog>
 
     <button type="button" class="theme-toggle" id="theme-toggle"></button>
 
     <script>
+        const modal  = document.getElementById('auth-modal');
+        const tabs   = document.querySelectorAll('.tab');
+        const panels = { login: document.getElementById('panel-login'), register: document.getElementById('panel-register') };
+
+        function showTab(name) {
+            tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+            Object.keys(panels).forEach(k => panels[k].classList.toggle('active', k === name));
+            const first = panels[name].querySelector('input[type="text"]');
+            if (first) first.focus();
+        }
+        tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+
+        document.getElementById('open-auth').addEventListener('click', () => { modal.showModal(); showTab('login'); });
+        document.getElementById('close-auth').addEventListener('click', () => modal.close());
+        // Clicking the dark area outside the box closes it
+        modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+
+        <?php if ($autoOpen): ?>
+        modal.showModal();
+        <?php endif; ?>
+
+        // Light / dark switch (remembered)
         const root = document.documentElement;
         const btn  = document.getElementById('theme-toggle');
-
         function paint() {
-            const plain = root.dataset.theme === 'plain';
-            btn.textContent = plain ? 'Theme: Plain \u00b7 switch to Fredbear' : 'Theme: Fredbear \u00b7 switch to Plain';
-            btn.setAttribute('aria-label', btn.textContent);
+            btn.textContent = root.dataset.theme === 'light' ? '\u{1F319} Dark mode' : '\u2600\uFE0F Light mode';
         }
         btn.addEventListener('click', () => {
-            const next = root.dataset.theme === 'plain' ? 'fredbear' : 'plain';
+            const next = root.dataset.theme === 'light' ? 'dark' : 'light';
             root.dataset.theme = next;
-            try { localStorage.setItem('landing-theme', next); } catch (e) {}
+            try { localStorage.setItem('theme', next); } catch (e) {}
             paint();
         });
         paint();

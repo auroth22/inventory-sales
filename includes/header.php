@@ -6,6 +6,7 @@ $page_title = $page_title ?? 'Inventory and Sales';
 ?>
 <!DOCTYPE html>
 <html lang="en">
+    <script>try{if(localStorage.getItem('theme')==='light')document.documentElement.dataset.theme='light';}catch(e){}</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
