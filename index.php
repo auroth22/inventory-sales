@@ -33,4 +33,8 @@ $lowList    = $conn->query("SELECT name, stock, reorder_level FROM products WHER
         <?php endwhile; ?>
     </table>
 <?php endif; ?>
+<h2>API</h2>
+<div class="api-links">
+    <a href="pages/api-demo.php" class="primary">Open API Explorer</a>
+</div>
 <?php require 'includes/footer.php'; ?>

@@ -273,3 +273,19 @@ button.secondary:hover { background: var(--line); }
 /* "Edit" in the table looks like a link */
 .link-button { background: none; color: var(--accent); padding: 0; font-weight: normal; }
 .link-button:hover { background: none; color: var(--accent-hover); text-decoration: underline; }
+
+/* API links on the dashboard */
+.api-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.api-links a {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    text-decoration: none;
+}
+.api-links a:hover { background: var(--raised); border-color: var(--accent); }
+
+.api-links a.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-family: inherit; font-weight: bold; }
+.api-links a.primary:hover { background: var(--accent-hover); }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 10, 2026 at 12:20 PM
+-- Generation Time: Nov 14, 2026 at 11:34 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `inventory_db`
 --
+CREATE DATABASE IF NOT EXISTS `inventory_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `inventory_db`;
 
 -- --------------------------------------------------------
 
@@ -93,7 +95,7 @@ INSERT INTO `products` (`id`, `category_id`, `name`, `price`, `stock`, `reorder_
 (21, 4, 'Hydrogen Peroxide 60ml', 28.00, 36, 12, 1),
 (22, 5, 'Loperamide 2mg (capsule)', 9.00, 90, 30, 1),
 (23, 5, 'Oral Rehydration Salts (sachet)', 15.00, 70, 25, 1),
-(24, 5, 'Antacid Tablet (pc)', 5.50, 260, 80, 1),
+(24, 5, 'Antacid Tablet (pc)', 5.50, 1, 80, 1),
 (25, 5, 'Simethicone 80mg (tablet)', 8.00, 7, 25, 1),
 (26, 6, 'Hand Sanitizer 100ml', 75.00, 30, 10, 1),
 (27, 6, 'Face Mask (box of 50)', 120.00, 18, 8, 1),
@@ -269,7 +271,8 @@ INSERT INTO `sales` (`id`, `user_id`, `total`, `created_at`) VALUES
 (146, 1, 279.00, '2026-11-10 00:38:00'),
 (147, 1, 57.50, '2026-11-10 07:11:00'),
 (148, 1, 123.50, '2026-11-10 02:15:00'),
-(149, 2, 37.50, '2026-11-10 06:38:00');
+(149, 2, 37.50, '2026-11-10 06:38:00'),
+(150, 1, 1424.50, '2026-11-14 05:19:00');
 
 -- --------------------------------------------------------
 
@@ -586,7 +589,8 @@ INSERT INTO `sale_items` (`id`, `sale_id`, `product_id`, `quantity`, `price`) VA
 (293, 148, 24, 1, 5.50),
 (294, 148, 17, 1, 68.00),
 (295, 149, 24, 3, 5.50),
-(296, 149, 16, 3, 7.00);
+(296, 149, 16, 3, 7.00),
+(297, 150, 24, 259, 5.50);
 
 -- --------------------------------------------------------
 
@@ -677,13 +681,13 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=150;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
 
 --
 -- AUTO_INCREMENT for table `sale_items`
 --
 ALTER TABLE `sale_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=297;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=298;
 
 --
 -- AUTO_INCREMENT for table `users`
